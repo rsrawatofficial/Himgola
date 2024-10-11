@@ -4,7 +4,7 @@ import requests
 from pyrogram import filters
 from Extractor import app
 from config import SUDO_USERS
-log_channel = (-1002363250260)
+log_channel = (-1002456765218)
 
 
 async def khan_login(app, message):
