@@ -189,7 +189,7 @@ button5 = [
                     InlineKeyboardButton("Yodha", callback_data="yodha_")
                 ],
                 [
-                    InlineKeyboardButton("Yesofficer", callback_data="yes_officer"),
+                    InlineKeyboardButton("YesOfficer", callback_data="yes_officer"),
                     InlineKeyboardButton("Soon", callback_data="maintainer_")
                 ],
                 [   
@@ -575,7 +575,7 @@ async def handle_callback(_, query):
 
   elif query.data == 'yes_officer':
         api = "yesofficerapi.classx.co.in"
-        name = "Yesofficer"
+        name = "yes officer"
         await appex_v3_txt(app, query.message, api, name) 
   
     elif query.data=="classplus_":          
