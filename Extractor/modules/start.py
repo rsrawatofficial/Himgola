@@ -189,7 +189,7 @@ button5 = [
                     InlineKeyboardButton("Yodha", callback_data="yodha_")
                 ],
                 [
-                    InlineKeyboardButton("YesOfficer", callback_data="yesofficer_"),
+                    InlineKeyboardButton("Yesofficer", callback_data="yes_officer"),
                     InlineKeyboardButton("Soon", callback_data="maintainer_")
                 ],
                 [   
@@ -573,9 +573,9 @@ async def handle_callback(_, query):
         name = "App Exampur"
         await appex_v3_txt(app, query.message, api, name) 
 
-  elif query.data == 'yesofficer_':
+  elif query.data == 'yes_officer':
         api = "yesofficerapi.classx.co.in"
-        name = "YesOfficer"
+        name = "Yesofficer"
         await appex_v3_txt(app, query.message, api, name) 
   
     elif query.data=="classplus_":          
