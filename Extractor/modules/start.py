@@ -189,8 +189,7 @@ button5 = [
                     InlineKeyboardButton("Yodha", callback_data="yodha_")
                 ],
                 [
-                    InlineKeyboardButton("YesOfficer", callback_data="yes_officer"),
-                    InlineKeyboardButton("Soon", callback_data="maintainer_")
+                    InlineKeyboardButton("YesOfficer", callback_data="yes_officer")
                 ],
                 [   
                     InlineKeyboardButton("Soon", callback_data="maintainer_"),
