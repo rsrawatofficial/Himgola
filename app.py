@@ -6,6 +6,6 @@ def hello_world():
     return 'Hello from LuciferBanker'
 
 
-if __name__ == "__main__":
+if __name__ == "main":
     app.run()
   
