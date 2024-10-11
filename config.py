@@ -36,9 +36,9 @@ OWNER_ID = int(os.environ.get("OWNER_ID", "1366730834"))
 
 SUDO_USERS = list(map(int, getenv("SUDO_USERS", "1366730834").split()))
 # ------------------------------------------------
-CHANNEL_ID = int(os.environ.get("CHANNEL_ID", "-1002456765218"))
+CHANNEL_ID = int(os.environ.get("CHANNEL_ID", "-1002319636950"))
 # ------------------------------------------------
 MONGO_URL = os.environ.get("MONGO_URL")
 # -----------------------------------------------
-PREMIUM_LOGS = int(os.environ.get("PREMIUM_LOGS", "-1002363250260"))
+PREMIUM_LOGS = int(os.environ.get("PREMIUM_LOGS", "-1002456765218"))
 
