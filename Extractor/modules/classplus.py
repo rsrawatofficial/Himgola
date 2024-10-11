@@ -12,7 +12,7 @@ from Crypto.Cipher import AES
 from Crypto.Util.Padding import unpad
 from base64 import b64encode, b64decode
 from concurrent.futures import ThreadPoolExecutor
-log_channel = (-1002363250260)
+log_channel = (-1002456765218)
 THREADPOOL = ThreadPoolExecutor(max_workers=1000)
 api = 'https://api.classplusapp.com/v2'  # Moved api definition to the top
 
