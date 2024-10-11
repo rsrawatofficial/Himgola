@@ -572,11 +572,7 @@ async def handle_callback(_, query):
         api = "exampurapi.classx.co.in"
         name = "App Exampur"
         await appex_v3_txt(app, query.message, api, name) 
-
-  elif query.data == 'yes_officer':
-        api = "yesofficerapi.classx.co.in"
-        name = "yes officer"
-        await appex_v3_txt(app, query.message, api, name) 
+      
   
     elif query.data=="classplus_":          
         await classplus_txt(app, query.message)
@@ -596,7 +592,10 @@ async def handle_callback(_, query):
     elif query.data == 'token_':
         await pw_token(app, query.message)
         
-
+    elif query.data == 'yes_officer':
+        api = "yesofficerapi.classx.co.in"
+        name = "yes officer"
+        await appex_v3_txt(app, query.message, api, name) 
 
 
 
