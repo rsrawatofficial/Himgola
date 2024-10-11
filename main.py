@@ -22,52 +22,37 @@
 
 
 import os
+import asyncio
+import importlib
+import logging
 from pyrogram import Client, idle
-import asyncio, logging
-import tgcrypto
-from pyromod import listen
 from logging.handlers import RotatingFileHandler
 from config import API_ID, API_HASH, BOT_TOKEN, OWNER_ID, SUDO_USERS, MONGO_URL, CHANNEL_ID, PREMIUM_LOGS  # Directly import required variables
+from Extractor.modules import ALL_MODULES
 
+# Configure logging
 LOGGER = logging.getLogger(__name__)
 logging.basicConfig(
     level=logging.INFO,
     format="%(name)s - %(message)s",
     datefmt="%d-%b-%y %H:%M:%S",
     handlers=[
-        RotatingFileHandler(
-            "log.txt", maxBytes=5000000, backupCount=10
-        ),
+        RotatingFileHandler("log.txt", maxBytes=5000000, backupCount=10),
         logging.StreamHandler(),
     ],
 )
 
-# Auth Users
-# If AUTH_USERS is available in os.environ, handle it as a string and convert to a list of integers
-AUTH_USERS = [int(chat) for chat in os.getenv("AUTH_USERS", "").split(",") if chat != '']
+# Bot initialization function
+async def sumit_boot():
+    for all_module in ALL_MODULES:
+        importlib.import_module("Extractor.modules." + all_module)
 
-# Prefixes 
-prefixes = ["/", "~", "?", "!"]
-
-plugins = dict(root="plugins")
+    LOGGER.info("» ʙᴏᴛ ᴅᴇᴘʟᴏʏ sᴜᴄᴄᴇssғᴜʟʟʏ ✨ 🎉")
+    await idle()
+    LOGGER.info("» ɢᴏᴏᴅ ʙʏᴇ ! sᴛᴏᴘᴘɪɴɢ ʙᴏᴛ.")
 
 if __name__ == "__main__":
-    bot = Client(
-        "doms_extra_bot",
-        bot_token=BOT_TOKEN,
-        api_id=API_ID,
-        api_hash=API_HASH,
-        sleep_threshold=20,
-        plugins=plugins,
-        workers=50
-    )
-    
-    async def main():
-        await bot.start()
-        bot_info = await bot.get_me()
-        LOGGER.info(f"<--- @{bot_info.username} Started (c) LUCIFERBANKER --->")
-        await idle()
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(sumit_boot())
 
-    asyncio.get_event_loop().run_until_complete(main())
-    LOGGER.info(f"<---Bot Stopped--->")
 
