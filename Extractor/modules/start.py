@@ -575,7 +575,7 @@ async def handle_callback(_, query):
 
   elif query.data == 'yesofficer_':
         api = "yesofficerapi.classx.co.in"
-        name = "App Exampur"
+        name = "YesOfficer"
         await appex_v3_txt(app, query.message, api, name) 
   
     elif query.data=="classplus_":          
