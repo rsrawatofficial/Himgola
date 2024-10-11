@@ -8,19 +8,19 @@
       "required": true
     },
     "API_HASH": {
-      "description": "81171c25e4cb9062cb10da8b7730432a",
+      "description": "42b34442e52dc3e07b3e0783389be8cb",
       "required": true
     },
     "BOT_TOKEN": {
-      "description": "7183102042:AAEnVz9WmroQNCl6luhjTJtJ_CrDKiU7Zog",
+      "description": "8015663864:AAGLRoTMXkj9Ndq4PL7oKLo0AtaYT68rxCM",
       "required": true
     },
     "BOT_USERNAME": {
-      "description": "DILDAAREXTRACTORBOT",
+      "description": "hai_kuch_kya_krega_jaan_kr",
       "required": true
     },
     "OWNER_ID": {
-      "description": "1996039956",
+      "description": "1366730834",
       "required": true
     },
     "SUDO_USERS": {
@@ -28,11 +28,11 @@
       "required": false
     },
     "CHANNEL_ID": {
-      "description": "-1002233460126",
+      "description": "-1002456765218",
       "required": true
     },
     "MONGO_URL": {
-      "description": "mongodb+srv://MRDAXX:MRDAXX@mrdaxx.prky3aj.mongodb.net/?retryWrites=true&w=majority",
+      "description": "mongodb+srv://creatorar30:fdINvMPYXYwUyHdq@cluster0.pbaou.mongodb.net/?retryWrites=true&w=majority",
       "required": true
     },
     "PREMIUM_LOGS": {
