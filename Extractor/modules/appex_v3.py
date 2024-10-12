@@ -143,41 +143,55 @@ async def appex_v3_txt(app, message, api, name):
     userid = output["data"]["userid"]
     token = output["data"]["token"]
     hdr1 = {
-            "Host": api,
-            "Client-Service": "Appx",
-            "Auth-Key": "appxapi",
-            "User-Id": userid,
-            "Authorization": token
-            }
+        "Host": api,
+        "Client-Service": "Appx",
+        "Auth-Key": "appxapi",
+        "User-Id": userid,
+        "Authorization": token
+    }
     await message.reply_text("**login Successful**")
-    res1 = requests.get(f"https://{api}/get/mycourseweb?userid="+userid, headers=hdr1)
+    res1 = requests.get(f"https://{api}/get/mycourseweb?userid=" + userid, headers=hdr1)
     b_data = res1.json()['data']
     cool = ""
+
+    # Initialize FFF before the loop
+    FFF = "BATCH-ID - BATCH NAME - INSTRUCTOR\n\n"  # Default value or header
+
     for data in b_data:
         t_name = data['course_name']
-        FFF = "BATCH-ID - BATCH NAME - INSTRUCTOR"
         aa = f"**`{data['id']}`      - `{data['course_name']}`**\n\n"
         if len(f'{cool}{aa}') > 4096:
             print(aa)
             cool = ""
         cool += aa
+
+    # Now FFF will always have a value
     await message.reply_text(f"**YOU HAVE THESE BATCHES:**\n\n{FFF}\n\n{cool}")
+    
     input2 = await app.ask(message.chat.id, text="**Now send the Batch ID to Download**")
     raw_text2 = input2.text
+    batch_name = None  # Initialize batch_name to None
+
     for data in b_data:
         if data['id'] == raw_text2:
             batch_name = data['course_name']
+
+    # Check if batch_name was found
+    if batch_name is None:
+        await message.reply_text("**Batch ID not found!**")
+        return
+
     scraper = cloudscraper.create_scraper()
-    html = scraper.get(f"https://{api}/get/allsubjectfrmlivecourseclass?courseid={raw_text2}",headers=hdr1).content
+    html = scraper.get(f"https://{api}/get/allsubjectfrmlivecourseclass?courseid={raw_text2}", headers=hdr1).content
     output0 = json.loads(html)
     subjID = output0["data"]
-    subjID_data = output0["data"]
     cool = ""
     fuk = ""
+
     for sub in subjID:
         subjid = sub["subjectid"]
         fuk += f"{subjid}&"
 
-    prog = await message.reply_text("**Extracting Videos Links Please Wait  📥 **") 
+    prog = await message.reply_text("**Extracting Videos Links Please Wait  📥 **")
     thread = threading.Thread(target=lambda: asyncio.run(appex_down(app, message, hdr1, api, raw_text2, fuk, batch_name, name, prog)))
     thread.start()
